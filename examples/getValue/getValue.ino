@@ -1,64 +1,62 @@
 
-#include <M5StickCPlus.h>
-#include "Unit_MiniEncoderC.h"
+#include "M5Unified.h"
+#include "M5HatMiniEncoderC.h"
 
-TFT_eSprite tftSprite = TFT_eSprite(&M5.Lcd);
-UNIT_MINIENCODERC sensor;
+M5Canvas canvas(&M5.Lcd);
+M5HatMiniEncoderC encoder;
 
-uint16_t delay_time = 0;
-int32_t last_value  = 0;
+int32_t last_value = 0;
 
 uint8_t i2c_address = 0;
 
 void page_get_encoder(void) {
-    int32_t encoder_value = sensor.getEncoderValue();
-    bool btn_status       = sensor.getButtonStatus();
+    int32_t encoder_value = encoder.getEncoderValue();
+    bool btn_status       = encoder.getButtonStatus();
     Serial.println(encoder_value);
     if (last_value != encoder_value) {
         if (last_value > encoder_value) {
-            sensor.setLEDColor(1, 0x000011);
+            encoder.setLEDColor(0x000011);  // Blue
         } else {
-            sensor.setLEDColor(2, 0x110000);
+            encoder.setLEDColor(0x110000);  // Red
         }
         last_value = encoder_value;
     } else {
-        // sensor.setLEDColor(0, 0x001100);
+        // encoder.setLEDColor(0x001100);
     }
     if (!btn_status) {
-        sensor.setLEDColor(0, 0x001100);
+        encoder.setLEDColor(0x001100);
     }
-    tftSprite.fillRect(0, 0, 135, 90, BLACK);
-    tftSprite.setTextColor(WHITE);
-    tftSprite.drawString("BTN:" + String(btn_status), 10, 10);
-    tftSprite.drawString("ENCODER:", 10, 40);
-    tftSprite.setCursor(10, 65);
-    tftSprite.setTextColor(GREEN);
-    tftSprite.printf("%d", encoder_value);
-    tftSprite.setTextColor(WHITE);
-    tftSprite.drawString("btnA:", 10, 120);
-    tftSprite.setTextColor(ORANGE);
-    tftSprite.drawString("get inc", 10, 150);
-    tftSprite.setTextColor(WHITE);
-    tftSprite.drawString("btnB:", 10, 180);
-    tftSprite.setTextColor(ORANGE);
-    tftSprite.drawString("reset", 10, 210);
-    tftSprite.pushSprite(0, 0);
+    canvas.fillRect(0, 0, 135, 90, BLACK);
+    canvas.setTextColor(WHITE);
+    canvas.drawString("BTN:" + String(btn_status), 10, 10);
+    canvas.drawString("ENCODER:", 10, 40);
+    canvas.setCursor(10, 65);
+    canvas.setTextColor(GREEN);
+    canvas.printf("%d", encoder_value);
+    canvas.setTextColor(WHITE);
+    canvas.drawString("btnA:", 10, 120);
+    canvas.setTextColor(ORANGE);
+    canvas.drawString("get inc", 10, 150);
+    canvas.setTextColor(WHITE);
+    canvas.drawString("btnB:", 10, 180);
+    canvas.setTextColor(ORANGE);
+    canvas.drawString("reset", 10, 210);
+    canvas.pushSprite(0, 0);
 }
 
 void get_inc_value(void) {
-    int32_t inc_value = sensor.getIncrementValue();
+    int32_t inc_value = encoder.getIncrementValue();
     Serial.printf("Inc:%d", inc_value);
 }
 
 void setup() {
     M5.begin();  // Init M5Stack.  初始化M5Stack
-    sensor.begin(&Wire, MINIENCODERC_ADDR, 0, 26, 100000UL);
-    tftSprite.setRotation(1);
-    tftSprite.createSprite(135, 240);
-    tftSprite.setTextSize(2);
-    delay_time  = 20;
-    i2c_address = sensor.getI2CAddress();
-    // sensor.setEncoderValue(97900);
+    encoder.begin(&Wire, MiniEncoderC_ADDR, 0, 26, 100000UL);
+    canvas.setRotation(0);
+    canvas.createSprite(135, 240);
+    canvas.setTextSize(2);
+    i2c_address = encoder.getI2CAddress();
+    // encoder.setEncoderValue(0);
 }
 
 void loop() {
@@ -66,7 +64,7 @@ void loop() {
     if (M5.BtnA.wasPressed()) {
         get_inc_value();
     } else if (M5.BtnB.wasPressed()) {
-        sensor.resetCounter();
+        encoder.resetCounter();
     }
     page_get_encoder();
 }
